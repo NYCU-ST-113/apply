@@ -138,7 +138,7 @@ async def delete_application(application_id: str):
 #     )
 
 
-PAYMENT_SERVICE_URL = "http://payment_service:8001/payment"
+# PAYMENT_SERVICE_URL = "http://payment_service:8001/payment"
 
 # Approve the apply
 # @app.put("/apply/{application_id}/approve")

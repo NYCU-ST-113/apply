@@ -119,3 +119,23 @@ pytest --cov=routers --cov-report=html tests/
 * Successful(成功)：繳費成功
 * Failed(失敗)：某些原因所以失敗了(e.g.逾期)
 * Canceled（已取消）：中斷申請流程
+
+# Docker
+## Rebuild
+```
+docker stop data-apply-1 && docker rm data-apply-1
+docker build -t data-apply .
+
+docker run -d \
+  --name data-apply-1 \
+  -p 8002:8000 \
+  --network data_app-network \
+  --restart unless-stopped \
+  -e DATABASE_URL=mysql://user:password@db:3306/appdb \
+  data-apply
+
+docker exec -it data-apply-1 python3 -c "import mysql.connector; print('OK')"
+
+sudo docker exec -it data-apply-1 bash
+
+```

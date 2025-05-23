@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from models import ApplicationForm, ApplicationType, GeneralApplicationRequest, ApplicationResponse, dnsApplicationForm, ApplicationStatus
 from uuid import uuid4, UUID
 from typing import Any, Dict
+import mysql.connector
+import json
 
 router = APIRouter()
 
@@ -43,6 +45,18 @@ db[app_id] = {
     "extra": dns_form
 }
 
+def get_db_connection():
+    try:
+        return mysql.connector.connect(
+            host="data-db-1",
+            port=3306,
+            user="user",
+            password="password",
+            database="appdb"
+        )
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
 # Create
 @router.post("/", response_model=ApplicationResponse)
 async def create_application(request: GeneralApplicationRequest):
@@ -53,23 +67,31 @@ async def create_application(request: GeneralApplicationRequest):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Invalid DNS form: {str(e)}")
         # Save data to DB
-        db[app_id] = {
-            "type": request.application_type,
-            "base": request.baseForm,
-            "extra": dns_form
-        }
-
-    # elif request.application_type == ApplicationType.office:
-    #     try:
-    #         office_form = dnsApplicationForm(**request.additionForm)
-    #     except Exception as e:
-    #         raise HTTPException(status_code=400, detail=f"Invalid DNS form: {str(e)}")
-        
-    #     db[app_id] = {
-    #         "type": request.application_type,
-    #         "base": request.baseForm,
-    #         "extra": dns_form
-    #     }
+        # db[app_id] = {
+        #     "type": request.application_type,
+        #     "base": request.baseForm,
+        #     "extra": dns_form
+        # }
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            query = """
+            INSERT INTO applications (id, type, base_form, extra_form)
+            VALUES (%s, %s, %s, %s)
+            """
+            values = (
+                app_id,
+                request.application_type.value,
+                request.baseForm.json(), 
+                dns_form.json() 
+            )
+            cursor.execute(query, values)
+            conn.commit()
+        except mysql.connector.Error as e:
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        finally:
+            cursor.close()
+            conn.close()
     else:
         raise HTTPException(status_code=400, detail="Unsupported application type")
 
@@ -77,20 +99,35 @@ async def create_application(request: GeneralApplicationRequest):
         "application_id": app_id,
         "message": f"Thanks for your {request.application_type.value} apply!"
     }
-# Create with JWT verification
-# @router.post("/", response_model=ApplicationResponse)
-# async def create_application(request: dnsApplicationRequest, token_data: dict = Depends(verify_jwt_token)):
-#     app_id = str(uuid4())
-#     db[app_id] = request.baseForm
-#     return {
-#         "application_id": app_id,
-#         "message": f"Thanks {token_data['name']} for your apply, we will send email to {request.baseForm.applicant_email}"
-#     }
 
 # Read
 @router.get("/", response_model=Dict[str, Dict[str, Any]])
 async def get_all_applications():
-    return db
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT id, type, base_form, extra_form FROM applications"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        applications = {}
+        for row in results:
+            applications[row["id"]] = {
+                "type": row["type"],
+                "base": json.loads(row["base_form"]),
+                "extra": json.loads(row["extra_form"]) if row["extra_form"] else None
+            }
+        
+        count = len(results)
+        print(f"Retrieved {count} applications from database")
+        
+        return applications
+    
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
 
 # Read by application ID
 @router.get("/{application_id}", response_model=ApplicationForm)

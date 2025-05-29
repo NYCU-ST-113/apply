@@ -1,0 +1,50 @@
+INSERT INTO applications (id, type, base_form, extra_form) VALUES
+-- DNS 申請 1
+('1e7d439a-d61b-43a5-a97c-50a8df120001', 'DNS',
+'{
+  "department": "Computer Science",
+  "applicant_account": "s123456",
+  "applicant_name": "Alice Chen",
+  "applicant_phone": "0912345678",
+  "applicant_email": "alice.chen@example.edu",
+  "tech_contact_name": "Bob Wang",
+  "tech_contact_phone": "0922333444",
+  "tech_contact_email": "bob.wang@example.edu",
+  "supervisor_name": "Dr. Lee",
+  "supervisor_id": "A123456789",
+  "supervisor_email": "dr.lee@example.edu",
+  "apply_date": "2025-05-20",
+  "status": "Pending"
+}',
+'{
+  "applicant_unit": "CS Department",
+  "domain_name": "cs.example.edu",
+  "application_project": "Student Portal",
+  "dns_manage_account": "dns_admin",
+  "reason": "Hosting department web portal"
+}'),
+
+-- DNS 申請 2
+('1e7d439a-d61b-43a5-a97c-50a8df120002', 'DNS',
+'{
+  "department": "Information Engineering",
+  "applicant_account": "s789012",
+  "applicant_name": "Kevin Lin",
+  "applicant_phone": "0988777666",
+  "applicant_email": "kevin.lin@example.edu",
+  "tech_contact_name": "Linda Wu",
+  "tech_contact_phone": "0933444555",
+  "tech_contact_email": "linda.wu@example.edu",
+  "supervisor_name": "Dr. Huang",
+  "supervisor_id": "B223456789",
+  "supervisor_email": "dr.huang@example.edu",
+  "apply_date": "2025-05-25",
+  "status": "Approved"
+}',
+'{
+  "applicant_unit": "IE Department",
+  "domain_name": "lab.ie.example.edu",
+  "application_project": "Research Lab",
+  "dns_manage_account": "labdns",
+  "reason": "Set up DNS for lab access"
+}');

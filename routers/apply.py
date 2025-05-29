@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from models import ApplicationForm, ApplicationType, GeneralApplicationRequest, ApplicationResponse, dnsApplicationForm, ApplicationStatus
 from uuid import uuid4, UUID
-from typing import Any, Dict
+from typing import Any, Dict, List
 import mysql.connector
 import json
 
@@ -113,6 +113,44 @@ async def get_application(application_id: str):
         cursor.close()
         conn.close()
 
+# Get application by student ID
+@router.get("/my-applications", response_model=List[Dict[str, Any]])
+async def get_applications_by_user(request: Request):
+    user_id = request.headers.get("X-User-Id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Missing X-User-Id header")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT id, type, base_form, extra_form 
+            FROM applications 
+            WHERE JSON_UNQUOTE(JSON_EXTRACT(base_form, '$.applicant_account')) = %s
+        """
+        cursor.execute(query, (user_id,))
+        rows = cursor.fetchall()
+
+        if not rows:
+            return []
+
+        results = []
+        for row in rows:
+            results.append({
+                "application_id": row["id"],
+                "type": row["type"],
+                "base": json.loads(row["base_form"]) if row["base_form"] else None,
+                "extra": json.loads(row["extra_form"]) if row["extra_form"] else None
+            })
+
+        return results
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
 # Update by application ID
 @router.put("/{application_id}", response_model=ApplicationResponse)
 async def update_application(application_id: str, updated_data: GeneralApplicationRequest):
@@ -153,6 +191,36 @@ async def update_application(application_id: str, updated_data: GeneralApplicati
     return {
         "application_id": application_id,
         "message": "Application updated successfully"
+    }
+
+@router.put("/cancel/{application_id}", response_model=ApplicationResponse)
+async def cancel_application(application_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            UPDATE applications
+            SET base_form = JSON_SET(base_form, '$.status', %s)
+            WHERE id = %s
+        """
+        values = (ApplicationStatus.canceled.value, application_id)
+
+        cursor.execute(query, values)
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Application not found")
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {
+        "application_id": application_id,
+        "message": "Application canceled successfully"
     }
 
 # Delete by application ID

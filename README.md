@@ -137,5 +137,10 @@ docker run -d \
 docker exec -it data-apply-1 python3 -c "import mysql.connector; print('OK')"
 
 sudo docker exec -it data-apply-1 bash
+sudo docker-compose logs data-apply
 
+```
+
+```
+curl -X GET http://localhost/apply/my-applications -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IjMxMzU4MTAxNyIsImVtYWlsIjoieXV4dW4uaWkxM0BueWN1LmVkdS50dyIsInJvbGUiOiJzdHVkZW50IiwiZXhwIjoxNzQ4NDMwMTg5fQ.HDwtyQmfxoQZwBlhbx0hP-XY9FYAjkSQrBMtQA548o0"
 ```

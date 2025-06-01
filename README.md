@@ -142,5 +142,5 @@ sudo docker-compose logs data-apply
 ```
 
 ```
-curl -X GET http://localhost/apply/my-applications -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IjMxMzU4MTAxNyIsImVtYWlsIjoieXV4dW4uaWkxM0BueWN1LmVkdS50dyIsInJvbGUiOiJzdHVkZW50IiwiZXhwIjoxNzQ4NDMwMTg5fQ.HDwtyQmfxoQZwBlhbx0hP-XY9FYAjkSQrBMtQA548o0"
+curl -X GET http://140.113.207.240/api/apply/my-applications -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IjMxMzU4MTAxNyIsImVtYWlsIjoieXV4dW4uaWkxM0BueWN1LmVkdS50dyIsInJvbGUiOiJzdHVkZW50IiwiZXhwIjoxNzQ4NzU5MTEzfQ.QqeyNIkNTDqY26SirmoPbHvOw6abuOCGc-2C03DUID"
 ```

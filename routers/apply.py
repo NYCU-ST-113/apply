@@ -58,7 +58,7 @@ async def create_application(request: GeneralApplicationRequest):
     }
 
 # Read all
-@router.get("/", response_model=Dict[str, Dict[str, Any]])
+@router.get("/getAll", response_model=Dict[str, Dict[str, Any]])
 async def get_all_applications():
     
     try:
@@ -81,32 +81,6 @@ async def get_all_applications():
         
         return applications
     
-    except mysql.connector.Error as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    finally:
-        cursor.close()
-        conn.close()
-
-# Read by application ID
-@router.get("/{application_id}", response_model=Dict[str, Any])
-async def get_application(application_id: str):
-    print("GET application_id:", application_id)
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        query = "SELECT id, type, base_form, extra_form FROM applications WHERE id = %s"
-        cursor.execute(query, (application_id,))
-        row = cursor.fetchone()
-
-        if not row:
-            raise HTTPException(status_code=404, detail="Application not found")
-
-        return {
-            "type": row["type"],
-            "base": json.loads(row["base_form"]) if row["base_form"] else None,
-            "extra": json.loads(row["extra_form"]) if row["extra_form"] else None
-        }
-
     except mysql.connector.Error as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
@@ -150,6 +124,34 @@ async def get_applications_by_user(request: Request):
     finally:
         cursor.close()
         conn.close()
+
+# Read by application ID
+@router.get("/{application_id}", response_model=Dict[str, Any])
+async def get_application(application_id: str):
+    print("GET application_id:", application_id)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT id, type, base_form, extra_form FROM applications WHERE id = %s"
+        cursor.execute(query, (application_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Application not found")
+
+        return {
+            "type": row["type"],
+            "base": json.loads(row["base_form"]) if row["base_form"] else None,
+            "extra": json.loads(row["extra_form"]) if row["extra_form"] else None
+        }
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 # Update by application ID
 @router.put("/{application_id}", response_model=ApplicationResponse)

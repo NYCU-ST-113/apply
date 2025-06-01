@@ -20,7 +20,7 @@ def get_db_connection():
         raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
 # Create
-@router.post("/", response_model=ApplicationResponse)
+@router.post("/create", response_model=ApplicationResponse)
 async def create_application(request: GeneralApplicationRequest):
     app_id = str(uuid4())
     if request.application_type == ApplicationType.dns:
@@ -207,6 +207,66 @@ async def cancel_application(application_id: str):
             WHERE id = %s
         """
         values = (ApplicationStatus.canceled.value, application_id)
+
+        cursor.execute(query, values)
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Application not found")
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {
+        "application_id": application_id,
+        "message": "Application canceled successfully"
+    }
+
+@router.put("/approved/{application_id}", response_model=ApplicationResponse)
+async def approve_application(application_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            UPDATE applications
+            SET base_form = JSON_SET(base_form, '$.status', %s)
+            WHERE id = %s
+        """
+        values = (ApplicationStatus.approved.value, application_id)
+
+        cursor.execute(query, values)
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Application not found")
+
+    except mysql.connector.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {
+        "application_id": application_id,
+        "message": "Application canceled successfully"
+    }
+
+@router.put("/rejected/{application_id}", response_model=ApplicationResponse)
+async def approve_application(application_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            UPDATE applications
+            SET base_form = JSON_SET(base_form, '$.status', %s)
+            WHERE id = %s
+        """
+        values = (ApplicationStatus.approved.value, application_id)
 
         cursor.execute(query, values)
         conn.commit()

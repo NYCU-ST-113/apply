@@ -266,7 +266,7 @@ async def approve_application(application_id: str):
             SET base_form = JSON_SET(base_form, '$.status', %s)
             WHERE id = %s
         """
-        values = (ApplicationStatus.approved.value, application_id)
+        values = (ApplicationStatus.rejected.value, application_id)
 
         cursor.execute(query, values)
         conn.commit()
